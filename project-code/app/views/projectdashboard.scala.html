@@ -1,4 +1,8 @@
-@default("Scala Dashboard", css) {
+@(project: String)
+
+@import views.ViewHelpers._
+
+@default("Scala Dashboard", css, scripts) {
 
 
 
@@ -12,7 +16,6 @@ data-read-only="${read_only}"
 
 
 
-#set(site)
 <div id="main_app">
 
 <div id="tabs">
@@ -33,7 +36,7 @@ data-read-only="${read_only}"
 </div>
 
 <div id="notebook_list">
-<div id="project_name"><h2>${project}</h2></div>
+<div id="project_name"><h2>@project</h2></div>
 </div>
 </div>
     <!--
@@ -62,16 +65,14 @@ data-read-only="${read_only}"
 
 </div>
 
-#end
+}
 
-#set(script)
-<script src="${static_url("js/notebooklist.js")}" type="text/javascript" charset="utf-8"></script>
-<script src="${static_url("js/clusterlist.js")}" type="text/javascript" charset="utf-8"></script>
-<script src="${static_url("js/projectdashboardmain.js")}" type="text/javascript" charset="utf-8"></script>
-#end
-
+@scripts = {
+    <script src="@snStatic("js/notebooklist.js")" type="text/javascript" charset="utf-8"></script>
+    <script src="@snStatic("js/clusterlist.js")" type="text/javascript" charset="utf-8"></script>
+    <script src="@snStatic("js/projectdashboardmain.js")" type="text/javascript" charset="utf-8"></script>
 }
 
 @css = {
-    <link rel="stylesheet" href="${static_url("css/projectdashboard.css")}" type="text/css" />
+    <link rel="stylesheet" href="@snStatic("css/projectdashboard.css")" type="text/css" />
 }

@@ -4,7 +4,8 @@ import play.api.mvc.{Action, Controller}
 
 object NotebookController extends Controller {
   def index = Action { implicit request =>
-    Ok(views.html.projectdashboard())
+    val projectName = "TODO Project Name"
+    Ok(views.html.projectdashboard(projectName))
   }
 
 }
