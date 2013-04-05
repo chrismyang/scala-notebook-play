@@ -2,19 +2,7 @@
 
 @import views.ViewHelpers._
 
-@default("Scala Dashboard", css, scripts) {
-
-
-
-
-#set(params)
-data-project="${project}"
-data-base-project-url="${base_project_url}"
-data-base-kernel-url="${base_kernel_url}"
-data-read-only="${read_only}"
-#end
-
-
+@default("Scala Dashboard", css, scripts, params(project)) {
 
 <div id="main_app">
 
@@ -75,4 +63,11 @@ data-read-only="${read_only}"
 
 @css = {
     <link rel="stylesheet" href="@snStatic("css/projectdashboard.css")" type="text/css" />
+}
+
+@params(project: String) = {
+    data-project="@project"
+    data-base-project-url="/"
+    data-base-kernel-url="/"
+    data-read-only="false"
 }
