@@ -1,6 +1,6 @@
 package controllers
 
-import play.api.mvc.{Action, Controller}
+import play.api.mvc.{WebSocket, Action, Controller}
 import play.api.Logger
 import com.bwater.notebook.server.Kernel
 import com.bwater.notebook.Router
@@ -11,8 +11,9 @@ import unfiltered.response.ResponseString
 import java.util.UUID
 import com.bwater.notebook.kernel.remote.VMManager
 import play.api.libs.json.{JsString, JsObject}
-import play.api.libs.concurrent.Akka
+import play.api.libs.concurrent.{Promise, Akka}
 import play.api.Play.current
+import play.api.libs.iteratee.{Enumerator, Iteratee}
 
 object KernelController extends Controller {
   def config = NotebookController.config
@@ -38,6 +39,22 @@ object KernelController extends Controller {
     ))
 
     Ok(json)
+  }
+
+  def open(kernelId: String, channel: String) = WebSocket.async[String] { request =>
+    Logger.info("Opening Socket %s for %s to %s".format(channel, kernelId, ""))
+
+
+
+    // Log events to the console
+    val in = Iteratee.foreach[String](println).mapDone { _ =>
+      println("Disconnected")
+    }
+
+    // Send a single 'Hello!' message
+    val out = Enumerator("Hello!")
+
+    Promise.pure((in, out))
   }
 
   def domain = NotebookController.domain
