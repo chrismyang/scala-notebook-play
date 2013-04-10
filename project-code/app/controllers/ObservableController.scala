@@ -19,7 +19,7 @@ object ObservableController extends Controller {
 
   def router = NotebookController.kernelRouter
 
-  def system = Akka.system
+  def system = NotebookController.system
 
   def open(contextId: String) = WebSocket.using[String] { request =>
     Logger.info("Opening observable WebSocket")
