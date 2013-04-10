@@ -1,8 +1,9 @@
 package controllers
 
-import play.api.mvc.{Action, Controller}
+import play.api.mvc.{ResponseHeader, SimpleResult, Action, Controller}
 import com.bwater.notebook.server.{ScalaNotebookConfig, NotebookSession}
 import play.api.libs.json.Json
+import play.api.Logger
 
 object NotebookController extends Controller with NotebookSession {
 
@@ -30,6 +31,37 @@ object NotebookController extends Controller with NotebookSession {
 
     Ok(views.html.notebook(nbm.name, id, name, wsUrl))
   }
+
+  def notebook(name: String) = Action { implicit request =>
+    val id = request.queryString.get("id").flatMap(_.headOption)
+    val format = request.queryString.get("format").flatMap(_.headOption).getOrElse("json")
+    getNotebook(id, name, format)
+  }
+
+  private def getNotebook(id: Option[String], name: String, format: String) = {
+    try {
+      val response = for {
+        (lastMod, name, data) <- nbm.getNotebook(id, name)
+      } yield {
+        format match {
+          case "json" =>
+            Ok(data).withHeaders(
+              CONTENT_DISPOSITION -> "attachment; filename=\"%s.snb".format(name),
+              LAST_MODIFIED -> lastMod
+            )
+
+          case _ => NotFound("Unsupported format.")
+        }
+      }
+
+      response getOrElse NotFound("Notebook not found.")
+    } catch {
+      case e: Exception =>
+        Logger.error("Error accessing notebook %s".format(name), e)
+        InternalServerError
+    }
+  }
+
 
   protected def config = ScalaNotebookConfig.defaults
 }
