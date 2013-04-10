@@ -26,39 +26,39 @@ object ObservableController extends Controller {
 
     val socket = Enumerator.imperative[String]()
 
-    system.actorOf(Props(new Actor {
-      router ! Router.Put(contextId, context.self)
-
-      val clientToVM = context.actorOf(Props(new GuardedActor {
-        def guard = for {
-          handler <- getType[ActorRef]
-        } yield {
-          case msg:ObservableClientChange =>
-            handler ! msg
-        }
-      }).withDispatcher("akka.actor.default-stash-dispatcher"), "clientToVM")
-
-      locally { // the locally actually matters; prevents serializability shenanigans
-        val vmToClient = context.actorOf(Props(new Actor {
-            def receive = {
-              case ObservableUpdate(obsId, newValue) =>
-
-                val respJson = JsObject(Seq(
-                  "id" -> JsString(obsId),
-                  "new_value" -> Json.parse(pretty(render(newValue)))
-                ))
-
-                socket.push(Json.stringify(respJson))
-            }
-          }), "vmToClient")
-
-          vmManager.tell(VMManager.Spawn(contextId, Props(new ObservableHandler(vmToClient))), clientToVM)
-      }
-
-      def receive = {
-        case occ: ObservableClientChange => clientToVM.forward(occ)
-      }
-    }))
+//    system.actorOf(Props(new Actor {
+//      router ! Router.Put(contextId, context.self)
+//
+//      val clientToVM = context.actorOf(Props(new GuardedActor {
+//        def guard = for {
+//          handler <- getType[ActorRef]
+//        } yield {
+//          case msg:ObservableClientChange =>
+//            handler ! msg
+//        }
+//      }).withDispatcher("akka.actor.default-stash-dispatcher"), "clientToVM")
+//
+//      locally { // the locally actually matters; prevents serializability shenanigans
+//        val vmToClient = context.actorOf(Props(new Actor {
+//            def receive = {
+//              case ObservableUpdate(obsId, newValue) =>
+//
+//                val respJson = JsObject(Seq(
+//                  "id" -> JsString(obsId),
+//                  "new_value" -> Json.parse(pretty(render(newValue)))
+//                ))
+//
+//                socket.push(Json.stringify(respJson))
+//            }
+//          }), "vmToClient")
+//
+//          vmManager.tell(VMManager.Spawn(contextId, Props(new ObservableHandler(vmToClient))), clientToVM)
+//      }
+//
+//      def receive = {
+//        case occ: ObservableClientChange => clientToVM.forward(occ)
+//      }
+//    }))
 
     val in = Iteratee.foreach[String] { msg =>
       Logger.debug("Observable %s got message %s".format(contextId, msg))
