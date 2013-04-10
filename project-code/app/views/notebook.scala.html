@@ -1,10 +1,10 @@
 @(project: String, notebook_id: String, notebook_name: String, ws_url: String)(implicit request: RequestHeader)
 
+@import views.ViewHelpers._
+@import com.bwater.notebook.server.LayoutTools._
+
 @default(notebook_name, css, scripts, params(project), Some(header)) {
 
-import com.bwater.notebook.server.LayoutTools._
-
-#set(site)
 
 <div id="menubar_container" class="vbox">
 <div id="ribbon">
@@ -163,32 +163,33 @@ import com.bwater.notebook.server.LayoutTools._
 }
 
 @css = {
-    #if (mathjax_url != "")
-    <script type="text/javascript" src="${mathjax_url}?config=TeX-AMS_HTML" charset="utf-8"></script>
-    #end
+    @if(mathjax_url != "") {
+    <script type="text/javascript" src="@mathjax_url?config=TeX-AMS_HTML" charset="utf-8"></script>
+    }
+
     <script type="text/javascript">
             // MathJax disabled, set as null to distingish from *missing* MathJax,
             // where it will be undefined, and should prompt a dialog later.
-            window.mathjax_url = "${mathjax_url}";
+            window.mathjax_url = "@mathjax_url";
     </script>
 
-    <link rel="stylesheet" href="${static_url("codemirror/lib/codemirror.css")}" />
-    <link rel="stylesheet" href="${static_url("codemirror/theme/ipython.css")}" />
+    <link rel="stylesheet" href="@snStatic("codemirror/lib/codemirror.css")" />
+    <link rel="stylesheet" href="@snStatic("codemirror/theme/ipython.css")" />
 
-    <link rel="stylesheet" href="${static_url("prettify/prettify.css")}" />
+    <link rel="stylesheet" href="@snStatic("prettify/prettify.css")" />
 
-    <link rel="stylesheet" href="${static_url("css/notebook.css")}" type="text/css" />
-    <link rel="stylesheet/less" href="${static_url("css/ribbon.less")}" type="text/css" />
-    <link rel="stylesheet" href="${static_url("css/renderedhtml.css")}" type="text/css" />
+    <link rel="stylesheet" href="@snStatic("css/notebook.css")" type="text/css" />
+    <link rel="stylesheet/less" href="@snStatic("css/ribbon.less")" type="text/css" />
+    <link rel="stylesheet" href="@snStatic("css/renderedhtml.css")" type="text/css" />
 
-    <link rel="stylesheet" href="${static_url("bootstrap-icon/css/bootstrap.min.css")}" type="text/css" />
+    <link rel="stylesheet" href="@snStatic("bootstrap-icon/css/bootstrap.min.css")" type="text/css" />
 
-    <link rel="stylesheet" href="${static_url("css/printnotebook.css")}" type="text/css" media="print" />
+    <link rel="stylesheet" href="@snStatic("css/printnotebook.css")" type="text/css" media="print" />
 }
 
 @scripts = {
 
-    <script src="${static_url("less.js")}" type="text/javascript"></script>
+    <script src="@snStatic("less.js")" type="text/javascript"></script>
     <script type="text/javascript">
     curl({
     baseUrl: '/',
@@ -206,54 +207,54 @@ import com.bwater.notebook.server.LayoutTools._
     }
     });
     </script>
-    <script src="${static_url("jquery/js/jquery.mousewheel.js")}" type="text/javascript" charset="utf-8"></script>
+    <script src="@snStatic("jquery/js/jquery.mousewheel.js")" type="text/javascript" charset="utf-8"></script>
 
-    <script src="${static_url("codemirror/lib/codemirror.js")}" charset="utf-8"></script>
-    <script src="${static_url("codemirror/mode/python/python.js")}" charset="utf-8"></script>
-    <script src="${static_url("codemirror/mode/htmlmixed/htmlmixed.js")}" charset="utf-8"></script>
-    <script src="${static_url("codemirror/mode/xml/xml.js")}" charset="utf-8"></script>
-    <script src="${static_url("codemirror/mode/javascript/javascript.js")}" charset="utf-8"></script>
-    <script src="${static_url("codemirror/mode/css/css.js")}" charset="utf-8"></script>
-    <script src="${static_url("codemirror/mode/rst/rst.js")}" charset="utf-8"></script>
-    <script src="${static_url("codemirror/mode/markdown/markdown.js")}" charset="utf-8"></script>
-    <script src="${static_url("codemirror/mode/clike/clike.js")}" charset="utf-8"></script>
+    <script src="@snStatic("codemirror/lib/codemirror.js")" charset="utf-8"></script>
+    <script src="@snStatic("codemirror/mode/python/python.js")" charset="utf-8"></script>
+    <script src="@snStatic("codemirror/mode/htmlmixed/htmlmixed.js")" charset="utf-8"></script>
+    <script src="@snStatic("codemirror/mode/xml/xml.js")" charset="utf-8"></script>
+    <script src="@snStatic("codemirror/mode/javascript/javascript.js")" charset="utf-8"></script>
+    <script src="@snStatic("codemirror/mode/css/css.js")" charset="utf-8"></script>
+    <script src="@snStatic("codemirror/mode/rst/rst.js")" charset="utf-8"></script>
+    <script src="@snStatic("codemirror/mode/markdown/markdown.js")" charset="utf-8"></script>
+    <script src="@snStatic("codemirror/mode/clike/clike.js")" charset="utf-8"></script>
 
-    <script src="${static_url("pagedown/Markdown.Converter.js")}" charset="utf-8"></script>
+    <script src="@snStatic("pagedown/Markdown.Converter.js")" charset="utf-8"></script>
 
-    <script src="${static_url("prettify/prettify.js")}" charset="utf-8"></script>
-    <script src="${static_url("dateformat/date.format.js")}" charset="utf-8"></script>
+    <script src="@snStatic("prettify/prettify.js")" charset="utf-8"></script>
+    <script src="@snStatic("dateformat/date.format.js")" charset="utf-8"></script>
 
-    <script src="${static_url("js/events.js")}" type="text/javascript" charset="utf-8"></script>
-    <script src="${static_url("js/utils.js")}" type="text/javascript" charset="utf-8"></script>
-    <script src="${static_url("js/layoutmanager.js")}" type="text/javascript" charset="utf-8"></script>
-    <script src="${static_url("js/initmathjax.js")}" type="text/javascript" charset="utf-8"></script>
-    <script src="${static_url("js/cell.js")}" type="text/javascript" charset="utf-8"></script>
-    <script src="${static_url("js/codecell.js")}" type="text/javascript" charset="utf-8"></script>
-    <script src="${static_url("js/textcell.js")}" type="text/javascript" charset="utf-8"></script>
-    <script src="${static_url("js/kernel.js")}" type="text/javascript" charset="utf-8"></script>
-    <script src="${static_url("js/savewidget.js")}" type="text/javascript" charset="utf-8"></script>
-    <script src="${static_url("js/keybindings.js")}" type="text/javascript" charset="utf-8"></script>
-    <script src="${static_url("js/quickhelp.js")}" type="text/javascript" charset="utf-8"></script>
-    <script src="${static_url("js/pager.js")}" type="text/javascript" charset="utf-8"></script>
-    <script src="${static_url("js/menubar.js")}" type="text/javascript" charset="utf-8"></script>
-    <script src="${static_url("js/toolbar.js")}" type="text/javascript" charset="utf-8"></script>
-    <script src="${static_url("js/notebook.js")}" type="text/javascript" charset="utf-8"></script>
-    <script src="${static_url("js/notificationwidget.js")}" type="text/javascript" charset="utf-8"></script>
-    <script src="${static_url("js/notebookmain.js")}" type="text/javascript" charset="utf-8"></script>
+    <script src="@snStatic("js/events.js")" type="text/javascript" charset="utf-8"></script>
+    <script src="@snStatic("js/utils.js")" type="text/javascript" charset="utf-8"></script>
+    <script src="@snStatic("js/layoutmanager.js")" type="text/javascript" charset="utf-8"></script>
+    <script src="@snStatic("js/initmathjax.js")" type="text/javascript" charset="utf-8"></script>
+    <script src="@snStatic("js/cell.js")" type="text/javascript" charset="utf-8"></script>
+    <script src="@snStatic("js/codecell.js")" type="text/javascript" charset="utf-8"></script>
+    <script src="@snStatic("js/textcell.js")" type="text/javascript" charset="utf-8"></script>
+    <script src="@snStatic("js/kernel.js")" type="text/javascript" charset="utf-8"></script>
+    <script src="@snStatic("js/savewidget.js")" type="text/javascript" charset="utf-8"></script>
+    <script src="@snStatic("js/keybindings.js")" type="text/javascript" charset="utf-8"></script>
+    <script src="@snStatic("js/quickhelp.js")" type="text/javascript" charset="utf-8"></script>
+    <script src="@snStatic("js/pager.js")" type="text/javascript" charset="utf-8"></script>
+    <script src="@snStatic("js/menubar.js")" type="text/javascript" charset="utf-8"></script>
+    <script src="@snStatic("js/toolbar.js")" type="text/javascript" charset="utf-8"></script>
+    <script src="@snStatic("js/notebook.js")" type="text/javascript" charset="utf-8"></script>
+    <script src="@snStatic("js/notificationwidget.js")" type="text/javascript" charset="utf-8"></script>
+    <script src="@snStatic("js/notebookmain.js")" type="text/javascript" charset="utf-8"></script>
 }
 
 @params(project: String) = {
-    data-project="${project}"
-    data-base-project-url="${base_project_url}"
-    data-base-kernel-url="${base_kernel_url}"
-    data-base-observable-url="${ws_url}/${base_observable_url}"
-    data-read-only="${read_only}"
-    data-notebook-id="${notebook_id}"
-    data-notebook-name="${notebook_name}"
+    data-project="@project"
+    data-base-project-url="/"
+    data-base-kernel-url="/"
+    data-base-observable-url="@ws_url/"
+    data-read-only="false"
+    data-notebook-id="@notebook_id"
+    data-notebook-name="@notebook_name"
 }
 
 @header = {
-    <a href="${base_project_url}"><i class="icon-chevron-left"></i></a>
+    <a href="/"><i class="icon-chevron-left"></i></a>
     <span id="save_widget">
         <span id="notebook_name"></span>
         <span id="save_status"></span>
