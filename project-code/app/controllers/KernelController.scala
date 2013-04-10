@@ -10,18 +10,24 @@ import net.liftweb.json._
 import unfiltered.response.ResponseString
 import java.util.UUID
 import com.bwater.notebook.kernel.remote.VMManager
-import play.api.libs.json.{Json, JsValue, JsString, JsObject}
+import play.api.libs.json._
 import play.api.libs.concurrent.{Promise, Akka}
 import play.api.Play.current
 import play.api.libs.iteratee.{Enumerator, Iteratee}
 import util.WebSockWrapperAdapter
-import play.api.libs.json.JsString
 import com.bwater.notebook.server.IopubChannel
 import com.bwater.notebook.server.ShellChannel
-import play.api.libs.json.JsObject
 import com.bwater.notebook.client.{ObjectInfoRequest, CompletionRequest, ExecuteRequest}
 import net.liftweb.json
 import java.util.concurrent.atomic.AtomicInteger
+import com.bwater.notebook.client.ObjectInfoRequest
+import com.bwater.notebook.client.CompletionRequest
+import play.api.libs.json.JsString
+import com.bwater.notebook.client.ExecuteRequest
+import com.bwater.notebook.server.IopubChannel
+import com.bwater.notebook.server.SessionRequest
+import com.bwater.notebook.server.ShellChannel
+import play.api.libs.json.JsObject
 
 object KernelController extends Controller {
   def config = NotebookController.config
@@ -69,7 +75,7 @@ object KernelController extends Controller {
     val in = Iteratee.foreach[String] { msg =>
       Logger.debug("Message for %s:%s".format(kernelId, msg))
 
-      dispatchRequest(Json.parse(msg), kernelId)
+      dispatchRequest(msg, kernelId)
 
     }.mapDone { _ =>
       Logger.info("Closing socket " + request.uri)
@@ -93,37 +99,45 @@ object KernelController extends Controller {
 
   def remoteSpawner(key: Any)(props: Props, replyTo: ActorRef) { vmManager.tell(VMManager.Start(key, config.notebooksDir), replyTo); vmManager.tell(VMManager.Spawn(key, props), replyTo)}
 
-  private def dispatchRequest(request: JsValue, kernelId: String) {
+  private def dispatchRequest(requestMessage: String, kernelId: String) {
     def sendRequest(request: Any) {
       kernelRouter ! Router.Forward(kernelId, request)
     }
 
-    for (h <- (request \ "header").asOpt[String]) {
-      val header = JString(h)
-      val session = JString((request \ "session").as[String])
-      val msgType = (request \ "msg_type").as[String]
-      val content = request \ "content"
+    val json = net.liftweb.json.parse(requestMessage)
 
+    for {
+      JField("header", header) <- json
+      JField("session", session) <- header
+      JField("msg_type", msgType) <- header
+      JField("content", content) <- json
+    } {
       msgType match {
-        case "execute_request" =>
-          val code = (content \ "code").as[String]
-          val execCounter = executionCounter.incrementAndGet()
-          sendRequest(SessionRequest(header, session, ExecuteRequest(execCounter, code)))
+        case JString("execute_request") => {
+          for (JField("code", JString(code)) <- content) {
+            val execCounter = executionCounter.incrementAndGet()
+            sendRequest(SessionRequest(header, session, ExecuteRequest(execCounter, code)))
+          }
+        }
 
-        case "complete_request" =>
-          val line = (content \ "line").as[String]
-          val cursorPos = (content \ "cursor_pos").as[Int]
+        case JString("complete_request") => {
+          for (
+            JField("line", JString(line)) <- content;
+            JField("cursor_pos", JInt(cursorPos)) <- content
+          ) {
 
-          sendRequest(SessionRequest(header, session, CompletionRequest(line, cursorPos)))
+            sendRequest(SessionRequest(header, session, CompletionRequest(line, cursorPos.toInt)))
+          }
+        }
 
-        case "object_info_request" =>
-          val oname = (content \ "oname").as[String]
-          sendRequest(SessionRequest(header, session, ObjectInfoRequest(oname)))
+        case JString("object_info_request") => {
+          for (JField("oname", JString(oname)) <- content) {
+            sendRequest(SessionRequest(header, session, ObjectInfoRequest(oname)))
+          }
+        }
 
-        case x =>
-          Logger.warn("Unrecognized websocket message: " + request)
+        case x => Logger.warn("Unrecognized websocket message: " + requestMessage) //throw new IllegalArgumentException("Unrecognized message type " + x)
       }
-
     }
   }
 }
