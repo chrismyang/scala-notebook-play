@@ -2,7 +2,7 @@ package controllers
 
 import play.api.mvc.{WebSocket, Action, Controller}
 import play.api.Logger
-import com.bwater.notebook.server.Kernel
+import com.bwater.notebook.server.{ShellChannel, WebSockWrapper, IopubChannel, Kernel}
 import com.bwater.notebook.Router
 import akka.actor.{ActorRef, Props}
 import unfiltered.response.{ResponseString, JsonContent}
@@ -14,6 +14,7 @@ import play.api.libs.json.{JsString, JsObject}
 import play.api.libs.concurrent.{Promise, Akka}
 import play.api.Play.current
 import play.api.libs.iteratee.{Enumerator, Iteratee}
+import util.WebSockWrapperAdapter
 
 object KernelController extends Controller {
   def config = NotebookController.config
@@ -41,20 +42,34 @@ object KernelController extends Controller {
     Ok(json)
   }
 
-  def open(kernelId: String, channel: String) = WebSocket.async[String] { request =>
-    Logger.info("Opening Socket %s for %s to %s".format(channel, kernelId, ""))
-
-
-
-    // Log events to the console
-    val in = Iteratee.foreach[String](println).mapDone { _ =>
-      println("Disconnected")
+  def open(kernelId: String, channel: String) = WebSocket.using[String] { request =>
+    def sendRequest(request: Any) {
+      kernelRouter ! Router.Forward(kernelId, request)
     }
 
-    // Send a single 'Hello!' message
-    val out = Enumerator("Hello!")
+    Logger.info("Opening Socket %s for %s to %s".format(channel, kernelId, ""))
 
-    Promise.pure((in, out))
+    val out = Enumerator.imperative[String]()
+
+    if (channel == "iopub")
+      kernelRouter ! Router.Forward(kernelId, IopubChannel(new WebSockWrapperAdapter(out)))
+    else if (channel == "shell")
+      kernelRouter ! Router.Forward(kernelId, ShellChannel(new WebSockWrapperAdapter(out)))
+
+
+    val in = Iteratee.foreach[String] { msg =>
+      Logger.debug("Message for %s:%s".format(kernelId, msg))
+
+      // TODO parse message and dispatch correctly
+
+    }.mapDone { _ =>
+      Logger.info("Closing socket " + request.uri)
+
+      vmManager ! VMManager.Kill(kernelId)
+      kernelRouter ! Router.Remove(kernelId)
+    }
+
+    (in, out)
   }
 
   def domain = NotebookController.domain
