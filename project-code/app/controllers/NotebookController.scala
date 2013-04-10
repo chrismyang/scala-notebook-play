@@ -63,5 +63,5 @@ object NotebookController extends Controller with NotebookSession {
   }
 
 
-  protected def config = ScalaNotebookConfig.defaults
+  def config = ScalaNotebookConfig.defaults
 }
