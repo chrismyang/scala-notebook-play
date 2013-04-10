@@ -1,4 +1,4 @@
-@(title: String, stylesheet: Html, scripts: Html, params: Html)(body: Html)
+@(title: String, stylesheet: Html, scripts: Html, params: Html, header: Option[Html] = None)(body: Html)
 
 @import views.ViewHelpers._
 @import com.bwater.notebook.server.LayoutTools._
@@ -27,7 +27,7 @@
         <div>
             <span id="login_widget"></span>
 
-            @*${unescape(header)}*@
+            @header
 
             <div id="logo">
                 <!-- TODO: External logo hook -->

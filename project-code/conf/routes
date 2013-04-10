@@ -8,6 +8,8 @@ GET     /                           controllers.NotebookController.index
 GET     /notebooks                  controllers.NotebookController.listNotebooks
 GET     /clusters                   controllers.NotebookController.clusters
 
+GET     /view/:name                 controllers.NotebookController.view(name)
+
 GET     /sn-assets/*file            controllers.ScalaNotebookAssets.at(file)
 
 # Map static resources from the /public folder to the /assets URL path
