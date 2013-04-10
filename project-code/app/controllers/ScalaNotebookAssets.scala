@@ -25,7 +25,7 @@ object ScalaNotebookAssets extends Controller {
   }
 
   private def tryLoadFileFromScalaNotebookRoots(filename: String) = {
-    tryLoadFile(FromIPythonRoot, filename) orElse tryLoadFile(ThirdPartyRoot, filename)
+    tryLoadFile(FromIPythonRoot, filename) orElse tryLoadFile(ThirdPartyRoot, filename) orElse tryLoadFile(ObservableJsRoot, filename)
   }
 
   private def tryLoadFile(root: String, filename: String) = {
@@ -54,4 +54,5 @@ object ScalaNotebookAssets extends Controller {
 
   private val FromIPythonRoot = "from_ipython/static"
   private val ThirdPartyRoot = "thirdparty/static"
+  private val ObservableJsRoot = "observable/js"
 }
