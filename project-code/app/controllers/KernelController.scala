@@ -98,29 +98,32 @@ object KernelController extends Controller {
       kernelRouter ! Router.Forward(kernelId, request)
     }
 
-    val header = JString((request \ "header").as[String])
-    val session = JString((request \ "session").as[String])
-    val msgType = (request \ "msg_type").as[String]
-    val content = request \ "content"
+    for (h <- (request \ "header").asOpt[String]) {
+      val header = JString(h)
+      val session = JString((request \ "session").as[String])
+      val msgType = (request \ "msg_type").as[String]
+      val content = request \ "content"
 
-    msgType match {
-      case "execute_request" =>
-        val code = (content \ "code").as[String]
-        val execCounter = executionCounter.incrementAndGet()
-        sendRequest(SessionRequest(header, session, ExecuteRequest(execCounter, code)))
+      msgType match {
+        case "execute_request" =>
+          val code = (content \ "code").as[String]
+          val execCounter = executionCounter.incrementAndGet()
+          sendRequest(SessionRequest(header, session, ExecuteRequest(execCounter, code)))
 
-      case "complete_request" =>
-        val line = (content \ "line").as[String]
-        val cursorPos = (content \ "cursor_pos").as[Int]
+        case "complete_request" =>
+          val line = (content \ "line").as[String]
+          val cursorPos = (content \ "cursor_pos").as[Int]
 
-        sendRequest(SessionRequest(header, session, CompletionRequest(line, cursorPos)))
+          sendRequest(SessionRequest(header, session, CompletionRequest(line, cursorPos)))
 
-      case "object_info_request" =>
-        val oname = (content \ "oname").as[String]
-        sendRequest(SessionRequest(header, session, ObjectInfoRequest(oname)))
+        case "object_info_request" =>
+          val oname = (content \ "oname").as[String]
+          sendRequest(SessionRequest(header, session, ObjectInfoRequest(oname)))
 
-      case x =>
-        Logger.warn("Unrecognized websocket message: " + request)
+        case x =>
+          Logger.warn("Unrecognized websocket message: " + request)
+      }
+
     }
   }
 }
