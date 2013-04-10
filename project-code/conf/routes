@@ -16,6 +16,8 @@ GET     /notebooks/:name            controllers.NotebookController.notebook(name
 GET     /kernels/:kernelId/:channel controllers.KernelController.open(kernelId, channel)
 POST    /kernels                    controllers.KernelController.start
 
+# Observable
+GET     /observable/:contextId      controllers.ObservableController.open(contextId)
 
 # SN Assets
 GET     /static/*file               controllers.ScalaNotebookAssets.at(file)
