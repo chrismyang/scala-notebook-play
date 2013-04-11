@@ -3,7 +3,11 @@ package controllers
 import play.api.mvc.{ResponseHeader, SimpleResult, Action, Controller}
 import com.bwater.notebook.server.{ScalaNotebookConfig, NotebookSession}
 import play.api.libs.json.Json
-import play.api.Logger
+import play.api.{Play, Logger}
+import com.bwater.notebook.kernel.pfork.ProcessFork
+import java.io.File
+import com.typesafe.config.Config
+import com.bwater.notebook.kernel.ConfigUtils
 
 object NotebookController extends Controller with NotebookSession {
 
@@ -63,5 +67,19 @@ object NotebookController extends Controller with NotebookSession {
   }
 
 
-  def config = ScalaNotebookConfig.defaults
+  def config = {
+    val c = ScalaNotebookConfig.withOverrides(ScalaNotebookConfig.defaults)
+    val x = c ++ ScalaNotebookConfig(
+      "kernel.classpath" -> """/Users/chris/dev/scala-notebook-play/project-code/target/scala-2.9.1/classes/"""
+    )
+
+    import ConfigUtils._
+
+    val customClasspath = x.kernelVMConfig.getArray("kernel.classpath").getOrElse(Nil)
+    val cpToUse = customClasspath :+ ""
+    cpToUse.mkString(File.pathSeparator)
+
+
+    x
+  }
 }
