@@ -1,0 +1,6 @@
+
+
+How to Deploy:
+
+    git subtree push --prefix project-code heroku master
+
