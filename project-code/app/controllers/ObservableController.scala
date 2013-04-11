@@ -73,12 +73,15 @@ class ObservableFoo(vmManager: ActorRef, system: ActorRefFactory) {
 
     val in = Iteratee.foreach[String] { msg =>
       Logger.debug("Observable %s got message %s".format(contextId, msg))
-      //      val json = parse(msg)
-      //
-      //      for (JField("id", JString(id)) <- json;
-      //           JField("new_value", value) <- json) {
-      //        router ! Router.Forward(contextId, ObservableClientChange(id, value))
-      //      }
+
+      if (!msg.startsWith("s_nr")) {
+        val json = parse(msg)
+
+        for (JField("id", JString(id)) <- json;
+             JField("new_value", value) <- json) {
+          router ! Router.Forward(contextId, ObservableClientChange(id, value))
+        }
+      }
     }.mapDone { _ =>
       router ! Router.Remove(contextId)
     }
