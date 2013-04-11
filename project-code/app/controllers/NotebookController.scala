@@ -67,19 +67,5 @@ object NotebookController extends Controller with NotebookSession {
   }
 
 
-  def config = {
-    val c = ScalaNotebookConfig.withOverrides(ScalaNotebookConfig.defaults)
-    val x = c ++ ScalaNotebookConfig(
-      "kernel.classpath" -> """/Users/chris/dev/scala-notebook-play/project-code/target/scala-2.9.1/classes/"""
-    )
-
-    import ConfigUtils._
-
-    val customClasspath = x.kernelVMConfig.getArray("kernel.classpath").getOrElse(Nil)
-    val cpToUse = customClasspath :+ ""
-    cpToUse.mkString(File.pathSeparator)
-
-
-    x
-  }
+  def config = ScalaNotebookConfig.withOverrides(ScalaNotebookConfig.defaults)
 }
