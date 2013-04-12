@@ -10,8 +10,7 @@ object ApplicationBuild extends Build {
   val appDependencies = Seq(
   )
 
-//  lazy val depProject = ProjectRef(uri("git://github.com/chrismyang/scala-notebook.git#play_20"), "server")
-  lazy val depProject = RootProject(uri("git://github.com/chrismyang/mustached-octo-lana.git#play_20"))
+  lazy val depProject = ProjectRef(uri("git://github.com/chrismyang/scala-notebook.git"), "server")
 
   val main = PlayProject(appName, appVersion, appDependencies, mainLang = SCALA).settings(
   ).dependsOn(depProject)
