@@ -13,8 +13,11 @@ GET     /view/:name                 controllers.NotebookController.view(name)
 GET     /notebooks/:name            controllers.NotebookController.notebook(name)
 
 # Kernel
-GET     /kernels/:kernelId/:channel controllers.KernelController.open(kernelId, channel)
 POST    /kernels                    controllers.KernelController.start
+
+POST    /kernels/:kernelId/:channel                         controllers.KernelController.open(kernelId, channel)
+GET     /kernels/:kernelId/:channel/:sessionId/poll         controllers.KernelController.poll(sessionId, kernelId, channel)
+POST    /kernels/:kernelId/:channel/:sessionId/sendmsg/:msg controllers.KernelController.sendMessage(sessionId, kernelId, channel, msg)
 
 # Observable
 GET     /observable/:contextId      controllers.ObservableController.open(contextId)

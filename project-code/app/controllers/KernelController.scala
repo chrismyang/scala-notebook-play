@@ -14,7 +14,7 @@ import play.api.libs.json._
 import play.api.libs.concurrent.{Promise, Akka}
 import play.api.Play.current
 import play.api.libs.iteratee.{Enumerator, Iteratee}
-import util.WebSockWrapperAdapter
+import util.{LongPollWebSockWrapper, WebSockWrapperAdapter}
 import com.bwater.notebook.server.IopubChannel
 import com.bwater.notebook.server.ShellChannel
 import com.bwater.notebook.client.{ObjectInfoRequest, CompletionRequest, ExecuteRequest}
@@ -30,13 +30,16 @@ import com.bwater.notebook.server.ShellChannel
 import play.api.libs.json.JsObject
 
 object KernelController extends Controller {
+
+  private val sockets = new LongPollEndpoints
+
   def config = NotebookController.config
 
   def system = NotebookController.system
 
   def start = Action { implicit request =>
     Logger.info("Starting kernel")
-    startKernel(UUID.randomUUID.toString, "ws", request.host)
+    startKernel(UUID.randomUUID.toString, "http", request.host)
   }
 
 
@@ -51,25 +54,32 @@ object KernelController extends Controller {
 
     val json = JsObject(Seq(
       "kernel_id" -> JsString(kernelId),
-      "ws_url" -> JsString("%s:/%s".format(protocol, host))
+      "ws_url" -> JsString("%s://%s".format(protocol, host))
     ))
 
     Ok(json)
   }
 
-  def open(kernelId: String, channel: String) = WebSocket.using[String] { request =>
+  def open(kernelId: String, channel: String) = Action { request =>
+    val longPollSocket = sockets.open()
+    openSocket(kernelId, channel, new LongPollWebSockWrapper(longPollSocket))
 
-    val out = Enumerator.imperative[String]()
+    // CY: No way to detect when connection has terminated, so can't trigger onSocketClose...
 
-    openSocket(kernelId, channel, new WebSockWrapperAdapter(out))
+    Ok(longPollSocket.sessionId)
+  }
 
-    val in = Iteratee.foreach[String] { msg =>
-      onSocketMessage(kernelId, msg)
-    }.mapDone { _ =>
-      onSocketClose(kernelId, request.uri)
+  def poll(sessionId: String, kernelId: String, channel: String) = Action {
+    val promise = sockets.get(sessionId).map(_.poll()).getOrElse(sys.error("Can't find session " + sessionId))
+
+    Async {
+      promise.map(Ok(_))
     }
+  }
 
-    (in, out)
+  def sendMessage(sessionId: String, kernelId: String, channel: String, msg: String) = Action {
+    onSocketMessage(kernelId, msg)
+    Ok
   }
 
   private def openSocket(kernelId: String, channel: String, socket: WebSockWrapper) {
