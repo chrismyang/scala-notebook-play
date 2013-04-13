@@ -8,11 +8,18 @@ object ApplicationBuild extends Build {
   val appVersion      = "1.0-SNAPSHOT"
 
   val appDependencies = Seq(
+    "org.vert-x" % "vertx-core" % "1.2.3.final"
   )
 
-  lazy val depProject = ProjectRef(uri("git://github.com/chrismyang/scala-notebook.git"), "server")
+  val snUri = uri("git://github.com/chrismyang/scala-notebook.git")
+
+  // Making these transitive dependecies first-order because idea plugin can't seem to follow transitive dependencies
+  lazy val snKernel = ProjectRef(snUri, "kernel")
+  lazy val snSubprocess = ProjectRef(snUri, "subprocess")
+
+  lazy val snServer = ProjectRef(snUri, "server")
 
   val main = PlayProject(appName, appVersion, appDependencies, mainLang = SCALA).settings(
-  ).dependsOn(depProject)
+  ).dependsOn(snServer, snSubprocess, snKernel)
 
 }
