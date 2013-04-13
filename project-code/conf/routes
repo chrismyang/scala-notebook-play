@@ -9,6 +9,7 @@ GET     /notebooks                  controllers.NotebookController.listNotebooks
 GET     /clusters                   controllers.NotebookController.clusters
 
 # Notebook
+POST    /new                        controllers.NotebookController.createNotebook
 GET     /view/:name                 controllers.NotebookController.view(name)
 GET     /notebooks/:name            controllers.NotebookController.notebook(name)
 

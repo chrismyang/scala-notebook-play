@@ -29,6 +29,11 @@ object NotebookController extends Controller with NotebookSession {
     Ok(Json.parse(s))
   }
 
+  def createNotebook = Action { implicit request =>
+    val newId = nbm.newNotebook()
+    Redirect(routes.NotebookController.view(nbm.idToName(newId)))
+  }
+
   def view(name: String) = Action { implicit request =>
     val id = request.queryString.get("id").flatMap(_.headOption).getOrElse(nbm.notebookId(name))
     val wsUrl = "ws:/%s:%d".format(domain, port)
