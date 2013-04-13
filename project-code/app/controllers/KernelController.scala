@@ -58,33 +58,39 @@ object KernelController extends Controller {
   }
 
   def open(kernelId: String, channel: String) = WebSocket.using[String] { request =>
-    def sendRequest(request: Any) {
-      kernelRouter ! Router.Forward(kernelId, request)
-    }
-
-    Logger.info("Opening Socket %s for %s to %s".format(channel, kernelId, ""))
 
     val out = Enumerator.imperative[String]()
 
-    if (channel == "iopub")
-      kernelRouter ! Router.Forward(kernelId, IopubChannel(new WebSockWrapperAdapter(out)))
-    else if (channel == "shell")
-      kernelRouter ! Router.Forward(kernelId, ShellChannel(new WebSockWrapperAdapter(out)))
-
+    openSocket(kernelId, channel, new WebSockWrapperAdapter(out))
 
     val in = Iteratee.foreach[String] { msg =>
-      Logger.debug("Message for %s:%s".format(kernelId, msg))
-
-      dispatchRequest(msg, kernelId)
-
+      onSocketMessage(kernelId, msg)
     }.mapDone { _ =>
-      Logger.info("Closing socket " + request.uri)
-
-      vmManager ! VMManager.Kill(kernelId)
-      kernelRouter ! Router.Remove(kernelId)
+      onSocketClose(kernelId, request.uri)
     }
 
     (in, out)
+  }
+
+  private def openSocket(kernelId: String, channel: String, socket: WebSockWrapper) {
+    Logger.info("Opening Socket %s for %s to %s".format(channel, kernelId, ""))
+
+    if (channel == "iopub")
+      kernelRouter ! Router.Forward(kernelId, IopubChannel(socket))
+    else if (channel == "shell")
+      kernelRouter ! Router.Forward(kernelId, ShellChannel(socket))
+  }
+
+  private def onSocketMessage(kernelId: String, msg: String) {
+    Logger.debug("Message for %s:%s".format(kernelId, msg))
+    dispatchRequest(msg, kernelId)
+  }
+
+  private def onSocketClose(kernelId: String, requestUri: String) {
+    Logger.info("Closing socket " + requestUri)
+
+    vmManager ! VMManager.Kill(kernelId)
+    kernelRouter ! Router.Remove(kernelId)
   }
 
   def domain = NotebookController.domain
