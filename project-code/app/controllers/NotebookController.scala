@@ -11,8 +11,6 @@ import com.bwater.notebook.kernel.ConfigUtils
 
 object NotebookController extends Controller with NotebookSession {
 
-  val domain = "127.0.0.1"
-  val port = 9000
 
   def index = Action { implicit request =>
     val projectName = "."
@@ -36,7 +34,7 @@ object NotebookController extends Controller with NotebookSession {
 
   def view(name: String) = Action { implicit request =>
     val id = request.queryString.get("id").flatMap(_.headOption).getOrElse(nbm.notebookId(name))
-    val wsUrl = "ws:/%s:%d".format(domain, port)
+    val wsUrl = "ws:/%s".format(request.host)
 
     Ok(views.html.notebook(nbm.name, id, name, wsUrl))
   }
