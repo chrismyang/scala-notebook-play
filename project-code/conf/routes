@@ -17,7 +17,7 @@ POST    /kernels                    controllers.KernelController.start
 
 POST    /kernels/:kernelId/:channel                         controllers.KernelController.open(kernelId, channel)
 GET     /kernels/:kernelId/:channel/:sessionId/poll         controllers.KernelController.poll(sessionId, kernelId, channel)
-POST    /kernels/:kernelId/:channel/:sessionId/sendmsg/:msg controllers.KernelController.sendMessage(sessionId, kernelId, channel, msg)
+POST    /kernels/:kernelId/:channel/:sessionId/sendmsg      controllers.KernelController.sendMessage(sessionId, kernelId, channel)
 
 # Observable
 GET     /observable/:contextId      controllers.ObservableController.open(contextId)

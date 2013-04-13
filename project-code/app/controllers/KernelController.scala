@@ -77,9 +77,13 @@ object KernelController extends Controller {
     }
   }
 
-  def sendMessage(sessionId: String, kernelId: String, channel: String, msg: String) = Action {
-    onSocketMessage(kernelId, msg)
-    Ok
+  def sendMessage(sessionId: String, kernelId: String, channel: String) = Action { request =>
+    (for {
+      msg <- request.body.asJson
+    } yield {
+      onSocketMessage(kernelId, Json.stringify(msg))
+      Ok
+    }).getOrElse(BadRequest)
   }
 
   private def openSocket(kernelId: String, channel: String, socket: WebSockWrapper) {
