@@ -3,8 +3,7 @@ package controllers
 import play.api.libs
 import libs.json._
 import play.api.Play.current
-import scala.util.Random
-import akka.actor.Props
+import akka.actor.{Actor, Props}
 import akka.dispatch.Await
 import akka.pattern.ask
 import akka.util.duration._
@@ -12,15 +11,18 @@ import play.api.libs.concurrent._
 import play.api.libs.json.JsArray
 import play.api.libs.json.JsObject
 import play.api.libs.json.JsString
+import play.api.libs.concurrent._
 
 class LongPoll(val sessionId: String) {
+  import LongPoll._
+
+  private lazy val queue = Akka.system.actorOf(Props[Queue])
 
   def send(text: String) {
-    messagingActor ! SendMessage(text)
+    queue ! Enqueue(text)
   }
 
   def poll(): Promise[JsValue] = {
-
     val promiseOfMessages = waitForNewMessages()
 
     val promiseOfResult = {
@@ -35,25 +37,33 @@ class LongPoll(val sessionId: String) {
     promiseOfResult
   }
 
-  private def waitForNewMessages(): Promise[List[Message]] = {
+  private def waitForNewMessages(): Promise[List[String]] = {
     implicit val timeout = akka.util.Timeout(60 seconds) // needed for ask below
-    Await.result(messagingActor.ask(ListenForMessages(rndClientId)).mapTo[Promise[List[Message]]], 60 seconds)
+    queue.ask(Drain).mapTo[List[String]].asPromise
   }
 
-  private def rndClientId = Random.nextInt(999999).toString()
-
-  private def messagesToJson(messages: List[Message]): JsObject = {
-    val jsObs = messages.map( msg => JsObject(Seq("data" -> JsString(msg.text))) )
+  private def messagesToJson(messages: List[String]): JsObject = {
+    val jsObs = messages.map( msg => JsObject(Seq("data" -> JsString(msg))) )
     JsObject(Seq("result" -> JsArray(jsObs)))
   }
+}
 
-  lazy val messagingActor = {
-    val actor = Akka.system.actorOf(Props[MessagingActor])
+object LongPoll {
 
-    // Tell the actor to broadcast messages every 1 second
-    Akka.system.scheduler.schedule(0 seconds, 1 seconds, actor, BroadcastMessages())
+  private case class Enqueue(message: String)
+  private case object Drain
+  private case class Messages(messages: List[String])
 
+  private class Queue extends Actor {
+    private var messages = List[String]()
 
-    actor
+    protected def receive = {
+      case Enqueue(message) =>
+        messages = messages :+ message
+
+      case Drain =>
+        sender ! messages
+        messages = Nil
+    }
   }
 }
