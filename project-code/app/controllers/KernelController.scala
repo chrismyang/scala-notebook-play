@@ -36,11 +36,11 @@ object KernelController extends Controller {
 
   def start = Action { implicit request =>
     Logger.info("Starting kernel")
-    startKernel(UUID.randomUUID.toString)
+    startKernel(UUID.randomUUID.toString, "ws", request.host)
   }
 
 
-  private def startKernel(kernelId: String) = {
+  private def startKernel(kernelId: String, protocol: String, host: String) = {
     val compilerArgs = config.kernelCompilerArgs
     val initScripts = config.kernelInitScripts
     // Load the user script from disk every time, so user changes are applied whenever a kernel is started/restarted.
@@ -51,7 +51,7 @@ object KernelController extends Controller {
 
     val json = JsObject(Seq(
       "kernel_id" -> JsString(kernelId),
-      "ws_url" -> JsString("ws:/%s:%d".format(domain, port))
+      "ws_url" -> JsString("%s:/%s".format(protocol, host))
     ))
 
     Ok(json)
@@ -92,10 +92,6 @@ object KernelController extends Controller {
     vmManager ! VMManager.Kill(kernelId)
     kernelRouter ! Router.Remove(kernelId)
   }
-
-  def domain = NotebookController.domain
-
-  def port = NotebookController.port
 
   def kernelRouter = NotebookController.kernelRouter
 
