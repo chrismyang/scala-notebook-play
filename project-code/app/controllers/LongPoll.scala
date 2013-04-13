@@ -43,7 +43,7 @@ class LongPoll(val sessionId: String) {
   private def rndClientId = Random.nextInt(999999).toString()
 
   private def messagesToJson(messages: List[Message]): JsObject = {
-    val jsObs = messages.map( msg => JsObject(Seq("msg" -> JsString(msg.text))) )
+    val jsObs = messages.map( msg => JsObject(Seq("data" -> JsString(msg.text))) )
     JsObject(Seq("result" -> JsArray(jsObs)))
   }
 

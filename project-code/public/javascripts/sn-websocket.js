@@ -39,7 +39,11 @@ var WebSocket = function (baseUrl) {
                         markAsOpen();
                     }
 
-                    _this.onmessage(data.result);
+                    var messages = data.result;
+                    for(var i=0; len=messages.length, i<len; i++) {
+                        var message = messages[i];
+                        _this.onmessage(message);
+                    }
 
                     if (_this._open) {
                         setTimeout(poll, 2000);
@@ -67,13 +71,15 @@ WebSocket.prototype._channelFailed = function (evt) {
 
 WebSocket.prototype.send = function (msg) {
     var _this = this;
-    $.ajax(this._getUrl() + 'sendmsg/'+msg, {
-        type: 'POST',
-        success: function(data) {
-            console.log("message sent");
-        },
+    var url = this._getUrl() + 'sendmsg';
+    $.ajax({
+        url: url,
+        type: "POST",
+        contentType: "application/json", // send as JSON
+        data: msg,
+        success: function () {},
         error: function(jqXHR, textStatus, errorThrown) {
-            _this._channelFailed(errorThrown);
+        _this._channelFailed(errorThrown);
         }
     });
 };
